@@ -1,6 +1,7 @@
 package org.annihilator.recommendation.schema;
 
 import org.apache.tinkerpop.gremlin.structure.Vertex;
+import org.janusgraph.core.Cardinality;
 import org.janusgraph.core.JanusGraph;
 import org.janusgraph.core.Multiplicity;
 import org.janusgraph.core.PropertyKey;
@@ -33,7 +34,7 @@ public class LoadSchema {
 			mgmt.makeEdgeLabel("Watched").multiplicity(Multiplicity.SIMPLE).make();
 
 			// Properties key for movie Vertex Label
-			mgmt.makePropertyKey("genres").dataType(String.class).make();
+			mgmt.makePropertyKey("genres").dataType(String.class).cardinality(Cardinality.SET).make();
 			mgmt.makePropertyKey("title").dataType(String.class).make();
 			mgmt.makePropertyKey("imdbId").dataType(String.class).make();
 			mgmt.makePropertyKey("tmdbId").dataType(String.class).make();

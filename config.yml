@@ -1,4 +1,4 @@
 logging:
   level: INFO
   loggers:
-    org.annihilator.recommendation: DEBUG
+    org.annihilator.recommendation: INFO

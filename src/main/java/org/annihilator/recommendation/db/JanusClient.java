@@ -1,8 +1,11 @@
 package org.annihilator.recommendation.db;
 
+import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 import org.annihilator.recommendation.schema.LoadSchema;
+import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.T;
@@ -10,6 +13,7 @@ import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.janusgraph.core.JanusGraph;
 import org.janusgraph.core.JanusGraphFactory;
 import org.janusgraph.core.JanusGraphTransaction;
+import org.janusgraph.core.JanusGraphVertex;
 import org.janusgraph.core.schema.JanusGraphManagement;
 import org.janusgraph.diskstorage.BackendException;
 import org.json.JSONObject;
@@ -31,8 +35,8 @@ public class JanusClient {
 	 */
 
 	JanusGraph graph = JanusGraphFactory.open("config/janusgraph-cql-es.properties");
-	
-	public JanusClient(){
+
+	public JanusClient() {
 		LoadSchema.loadSchema(graph);
 	}
 
@@ -54,12 +58,14 @@ public class JanusClient {
 
 		if (typeOfVertex.equals("movie")) {
 			String genres = jsonObject.getString("genres");
+			String[] genresList = genres.split("\\|");
 			String title = jsonObject.getString("title");
 			String imdbId = jsonObject.getString("imdbId");
 			String tmdbId = jsonObject.getString("tmdbId");
 
-			tx.addVertex(T.label, "Movie", "genres", genres, "title", title, "id", id, "imdbId", imdbId, "tmdbId",
-					tmdbId);
+			tx.addVertex(T.label, "genres", genresList, "Movie", "title", title, "id", id, "imdbId", imdbId,
+					"tmdbId", tmdbId);
+
 			tx.commit();
 
 			return true;
@@ -118,11 +124,25 @@ public class JanusClient {
 		}
 	}
 
+	public List<Map<String, Object>> getVertexAllProperties(String json) {
+		JSONObject jsonObject = new JSONObject(json);
+
+		String id = jsonObject.getString("id");
+		GraphTraversalSource g = graph.traversal();
+
+		GraphTraversal<Vertex, Vertex> node = g.V().has("id", id);
+
+		return node.valueMap().toList();
+	}
+
+	// CAUTION:
+	// This method is not recommended to have in production environment
+	// This method will delete all the data in JanusGraph database
 	public void purgeJanus() throws BackendException {
 
 		JanusGraphFactory.drop(graph);
 		graph = null;
-		
+
 		graph = JanusGraphFactory.open("config/janusgraph-cql-es.properties");
 	}
 }

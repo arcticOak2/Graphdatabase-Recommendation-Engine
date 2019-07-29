@@ -1,4 +1,4 @@
-package org.annihilator.recommendation.service;
+package org.annihilator.recommendation.controller;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -9,10 +9,10 @@ import javax.ws.rs.core.Response;
 import org.annihilator.recommendation.config.RecommendationEngineConfiguration;
 
 @Path("/engine")
-public class RecommendingEngineService {
+public class RecommendingEngineController {
 	RecommendationEngineConfiguration config;
 	
-	public RecommendingEngineService(RecommendationEngineConfiguration config) {
+	public RecommendingEngineController(RecommendationEngineConfiguration config) {
 		this.config = config;
 	}
 	

@@ -1,7 +1,7 @@
 package org.annihilator.recommendation.application;
 
 import org.annihilator.recommendation.config.RecommendationEngineConfiguration;
-import org.annihilator.recommendation.service.RecommendingEngineService;
+import org.annihilator.recommendation.controller.RecommendingEngineController;
 
 import io.dropwizard.Application;
 import io.dropwizard.setup.Environment;
@@ -16,7 +16,7 @@ public class RecommendationEngineApplication extends Application<RecommendationE
     @Override
     public void run(final RecommendationEngineConfiguration configuration,
                     final Environment environment) {
-    	environment.jersey().register(new RecommendingEngineService(configuration));
+    	environment.jersey().register(new RecommendingEngineController(configuration));
     }
     
 }

@@ -14,9 +14,16 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<janusgraph.version>0.3.1</janusgraph.version>
+		<cassandra.version>3.11.3</cassandra.version>
+		<elasticsearch.version>6.5.4</elasticsearch.version>
+		<tinkerpop.version>3.3.3</tinkerpop.version>
+		<slf4j.version>1.7.25</slf4j.version>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<dropwizard.version>1.3.13</dropwizard.version>
-		<mainClass>org.annihilator.recommendation.recommending-engineApplication</mainClass>
+		<mainClass>org.annihilator.recommendation.application.RecommendationEngineApplication</mainClass>
 	</properties>
 
 	<dependencyManagement>
@@ -41,6 +48,42 @@
 			<artifactId>lombok</artifactId>
 			<version>1.18.8</version>
 			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.janusgraph</groupId>
+			<artifactId>janusgraph-core</artifactId>
+			<version>${janusgraph.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.tinkerpop</groupId>
+			<artifactId>gremlin-server</artifactId>
+			<version>${tinkerpop.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.janusgraph</groupId>
+			<artifactId>janusgraph-cql</artifactId>
+			<version>${janusgraph.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>io.netty</groupId>
+					<artifactId>netty-handler</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.janusgraph</groupId>
+			<artifactId>janusgraph-es</artifactId>
+			<version>${janusgraph.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-simple</artifactId>
+			<version>${slf4j.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.json</groupId>
+			<artifactId>json</artifactId>
+			<version>20180813</version>
 		</dependency>
 	</dependencies>
 

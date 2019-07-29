@@ -1,6 +1,5 @@
 package org.annihilator.recommendation.db;
 
-import java.util.List;
 import java.util.NoSuchElementException;
 
 import org.annihilator.recommendation.schema.LoadSchema;
@@ -8,16 +7,9 @@ import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSo
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.T;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
-import org.janusgraph.core.EdgeLabel;
 import org.janusgraph.core.JanusGraph;
 import org.janusgraph.core.JanusGraphFactory;
 import org.janusgraph.core.JanusGraphTransaction;
-import org.janusgraph.core.Multiplicity;
-import org.janusgraph.core.PropertyKey;
-import org.janusgraph.core.SchemaViolationException;
-import org.janusgraph.core.VertexLabel;
-import org.janusgraph.core.schema.ConsistencyModifier;
-import org.janusgraph.core.schema.JanusGraphIndex;
 import org.janusgraph.core.schema.JanusGraphManagement;
 import org.janusgraph.diskstorage.BackendException;
 import org.json.JSONObject;
@@ -25,7 +17,7 @@ import org.json.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BatchLoad {
+public class JanusClient {
 
 	/**
 	 * 
@@ -34,11 +26,15 @@ public class BatchLoad {
 	 * impact on bulk loading times for most applications. So, make sure you enabled
 	 * this option in Janus configuration.
 	 * 
-	 * Author: Abhijeet Kumar Distributed Systems Engineer
+	 * Author: Abhijeet Kumar, Distributed Systems Engineer
 	 * 
 	 */
 
 	JanusGraph graph = JanusGraphFactory.open("config/janusgraph-cql-es.properties");
+	
+	public JanusClient(){
+		LoadSchema.loadSchema(graph);
+	}
 
 	public boolean addNode(String json) throws Exception {
 
@@ -122,24 +118,11 @@ public class BatchLoad {
 		}
 	}
 
-	public void getNode(String userId) {
-		GraphTraversalSource g = graph.traversal();
-		List<Object> output = g.V().values().toList();
-		System.out.print(output);
-	}
-
 	public void purgeJanus() throws BackendException {
 
 		JanusGraphFactory.drop(graph);
-
 		graph = null;
-		graph = JanusGraphFactory.open("config/janusgraph-cql-es.properties");
-	}
-
-	public static void main(String[] args) throws Exception {
-		BatchLoad load = new BatchLoad();
 		
-		load.purgeJanus();
-		LoadSchema.loadSchema(load.graph);
+		graph = JanusGraphFactory.open("config/janusgraph-cql-es.properties");
 	}
 }

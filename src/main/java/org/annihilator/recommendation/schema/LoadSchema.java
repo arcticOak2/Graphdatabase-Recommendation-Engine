@@ -39,10 +39,8 @@ public class LoadSchema {
 
 			// Properties key for Watched Edge Label
 			final PropertyKey userId = mgmt.makePropertyKey("userId").dataType(String.class).make();
-			mgmt.makePropertyKey("tag").dataType(String.class).make();
-			mgmt.makePropertyKey("tagsTimestamp").dataType(String.class).make();
 			mgmt.makePropertyKey("rating").dataType(String.class).make();
-			mgmt.makePropertyKey("ratingTimestamp").dataType(String.class).make();
+			mgmt.makePropertyKey("timestamp").dataType(String.class).make();
 			
 			JanusGraphManagement.IndexBuilder userIdIndexBuilder = mgmt.buildIndex("userId", Vertex.class).addKey(userId);
 			userIdIndexBuilder.unique();

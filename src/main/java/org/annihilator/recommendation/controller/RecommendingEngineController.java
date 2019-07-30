@@ -49,7 +49,7 @@ public class RecommendingEngineController {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response appendEdge(String json) {
 		try {
-			client.addEdge(json);
+			client.addEdge(json, false);
 		} catch (Exception e) {
 			return Response.status(500).build();
 		}

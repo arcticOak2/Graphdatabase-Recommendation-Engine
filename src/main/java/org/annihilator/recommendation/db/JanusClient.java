@@ -14,7 +14,6 @@ import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.janusgraph.core.JanusGraph;
 import org.janusgraph.core.JanusGraphFactory;
 import org.janusgraph.core.JanusGraphTransaction;
-import org.janusgraph.core.JanusGraphVertex;
 import org.janusgraph.core.TransactionBuilder;
 import org.janusgraph.core.schema.JanusGraphManagement;
 import org.janusgraph.diskstorage.BackendException;
@@ -49,7 +48,7 @@ public class JanusClient {
 		return tx;
 	}
 
-	public boolean addNode(String json, boolean batchMode) throws Exception {
+	public boolean addNode(String json, boolean bulkMode) throws Exception {
 
 		JSONObject jsonObject = new JSONObject(json);
 
@@ -63,7 +62,7 @@ public class JanusClient {
 
 		String typeOfVertex = jsonObject.getString("type");
 		JanusGraphTransaction tx = null;
-		if (!batchMode)
+		if (!bulkMode)
 			tx = graph.newTransaction();
 		else {
 			tx = enableBatchLoading();
@@ -96,15 +95,13 @@ public class JanusClient {
 		}
 	}
 
-	public boolean addEdge(String json) throws Exception {
+	public boolean addEdge(String json, boolean bulkMode) throws Exception {
 		JSONObject jsonObject = new JSONObject(json);
 
 		String userId = jsonObject.getString("userId");
 		String movieId = jsonObject.getString("movieId");
-		String tags = jsonObject.getString("tags");
-		String tagsTimestamp = jsonObject.getString("tagsTimestamp");
 		String rating = jsonObject.getString("rating");
-		String ratingTimestamp = jsonObject.getString("ratingTimestamp");
+		String timestamp = jsonObject.getString("timestamp");
 
 		JanusGraphManagement mgmt = graph.openManagement();
 		GraphTraversalSource g = graph.traversal();
@@ -122,9 +119,8 @@ public class JanusClient {
 		if (null != subNode && null != objNode) {
 			Edge watched = subNode.addEdge("watched", objNode);
 			watched.property("rating", rating);
-			watched.property("ratingTimestamp", ratingTimestamp);
-			watched.property("tags", tags);
-			watched.property("tagsTimestamp", tagsTimestamp);
+			watched.property("timestamp", timestamp);
+			
 			mgmt.commit();
 			g.tx().commit();
 			g.close();

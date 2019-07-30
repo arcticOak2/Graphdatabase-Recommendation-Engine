@@ -4,6 +4,9 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import org.annihilator.recommendation.db.JanusClient;
 import org.annihilator.recommendation.models.Movie;
+import org.annihilator.recommendation.models.Rating;
+import org.annihilator.recommendation.models.User;
+
 import com.google.gson.Gson;
 
 public class LoadMovieLensData {
@@ -25,6 +28,28 @@ public class LoadMovieLensData {
 		client.addNode(json, true);
 		
 	}
+	
+	private static void loadUserDataToJanus(String id) throws Exception {
+		User user = new User();
+		
+		user.setId(id);
+		
+		String json = gson.toJson(user);
+		client.addNode(json, true);
+	}
+	
+	private static void loadRelationDataToJanus(String data) throws Exception {
+		Rating rating = new Rating();
+		String[] datas = data.split(";", -1);
+		
+		rating.setUserId(datas[0]);
+		rating.setMovieId(datas[1]);
+		rating.setRating(datas[2]);
+		rating.setTimestamp(datas[3]);
+		
+		String json = gson.toJson(rating);
+		client.addEdge(json, false);
+	}
 
 	public static void main(String[] args) throws Exception {
 		client.purgeJanus();
@@ -35,11 +60,18 @@ public class LoadMovieLensData {
 			loadMoviesDataToJanus(line);
 		}
 		
-		in = new FileReader("src/main/resources/fullMovies.csv");
+		in = new FileReader("src/main/resources/users.csv");
 		br = new BufferedReader(in);
 		while ((line = br.readLine()) != null) {
-			loadMoviesDataToJanus(line);
+			loadUserDataToJanus(line);
 		}
+		
+		in = new FileReader("src/main/resources/ratings.csv");
+		br = new BufferedReader(in);
+		while ((line = br.readLine()) != null) {
+			loadRelationDataToJanus(line);
+		}
+		
 		in.close();
 	}
 }

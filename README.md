@@ -8,11 +8,14 @@ Expectation
 3. Backend should use Janusgraph to store data (Janusgraph is an opensource graph database)
 4. Backend should provide different strategy for recommendation
 
+Download MovieLens data from this link <https://grouplens.org/datasets/movielens/>
+
 ##Merge movies.csv with links.csv
 
-Joining movies.csv with links.csv in java code can be a problem because the files size can more than your heap size. The other problem will be speed. So, I preferred Apache Spark for this. You can use whatever suits you better. You can also find the files inside src/main/resources folder.
+Joining movies.csv with links.csv in java code can be a problem because the files size can more than your heap size. The other problem will be speed. So, I preferred Apache Spark for this. You can use whatever suits you better.
 
-I have used spark-shell for this purpose
+I have used spark-shell for this purpose. After merging the these two files put it inside sr/main/resources folder with the name `fullMovies.csv`
+
 Code:
 
 `/opt/spark/spark-shell --master local` (In my system spark is inside /opt. So, change it with yours!)

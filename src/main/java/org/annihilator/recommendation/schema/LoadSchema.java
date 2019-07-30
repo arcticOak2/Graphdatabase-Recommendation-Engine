@@ -18,14 +18,6 @@ public class LoadSchema {
 		graph.tx().rollback(); // Never create new indexes while a transaction is active
 		JanusGraphManagement mgmt = graph.openManagement();
 		try {
-
-			// Common property between movie and user
-			final PropertyKey id = mgmt.makePropertyKey("id").dataType(String.class).make();
-			JanusGraphManagement.IndexBuilder idIndexBuilder = mgmt.buildIndex("id", Vertex.class).addKey(id);
-			idIndexBuilder.unique();
-			JanusGraphIndex idIndex = idIndexBuilder.buildCompositeIndex();
-			mgmt.setConsistency(idIndex, ConsistencyModifier.LOCK);
-
 			// Vertex Labels
 			mgmt.makeVertexLabel("Movie").make();
 			mgmt.makeVertexLabel("User").make();
@@ -34,16 +26,28 @@ public class LoadSchema {
 			mgmt.makeEdgeLabel("Watched").multiplicity(Multiplicity.SIMPLE).make();
 
 			// Properties key for movie Vertex Label
+			final PropertyKey movieId = mgmt.makePropertyKey("movieId").dataType(String.class).make();
 			mgmt.makePropertyKey("genres").dataType(String.class).cardinality(Cardinality.SET).make();
 			mgmt.makePropertyKey("title").dataType(String.class).make();
 			mgmt.makePropertyKey("imdbId").dataType(String.class).make();
 			mgmt.makePropertyKey("tmdbId").dataType(String.class).make();
+			
+			JanusGraphManagement.IndexBuilder movieIdIndexBuilder = mgmt.buildIndex("movieId", Vertex.class).addKey(movieId);
+			movieIdIndexBuilder.unique();
+			JanusGraphIndex movieIdIndex = movieIdIndexBuilder.buildCompositeIndex();
+			mgmt.setConsistency(movieIdIndex, ConsistencyModifier.LOCK);
 
 			// Properties key for Watched Edge Label
+			final PropertyKey userId = mgmt.makePropertyKey("userId").dataType(String.class).make();
 			mgmt.makePropertyKey("tag").dataType(String.class).make();
 			mgmt.makePropertyKey("tagsTimestamp").dataType(String.class).make();
 			mgmt.makePropertyKey("rating").dataType(String.class).make();
 			mgmt.makePropertyKey("ratingTimestamp").dataType(String.class).make();
+			
+			JanusGraphManagement.IndexBuilder userIdIndexBuilder = mgmt.buildIndex("userId", Vertex.class).addKey(userId);
+			userIdIndexBuilder.unique();
+			JanusGraphIndex userIdIndex = userIdIndexBuilder.buildCompositeIndex();
+			mgmt.setConsistency(userIdIndex, ConsistencyModifier.LOCK);
 
 			mgmt.commit();
 		} catch (SchemaViolationException e) {

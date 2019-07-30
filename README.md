@@ -32,4 +32,11 @@ joinedMovieInfo.show()
  */
 val ssvWithHeaderOptions: Map[String, String] = Map(("delimiter", ";"), ("header", "true"))
 joinedMovieInfo.write.options(tsvWithHeaderOptions).csv("path/to/store/ssv")
+
+// To get data for UserId
+
+val ratings = spark.read.format("csv").option("header", "true").option("inferSchema", true).load("/path/to/ratings.csv")
+val users = ratings.select("userId")
+val user = users.dropDuplicates()
+user.coalesce(1).write.csv("path/to/write/users.csv")
 ```

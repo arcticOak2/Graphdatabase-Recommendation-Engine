@@ -135,7 +135,7 @@ public class JanusClient {
 		}
 	}
 
-	public List<Map<String, Object>> getVertexAllProperties(String json) {
+	public List<Map<String, Object>> getVertexProperties(String json) {
 		JSONObject jsonObject = new JSONObject(json);
 		String id;
 		GraphTraversal<Vertex, Vertex> node = null;
@@ -156,7 +156,7 @@ public class JanusClient {
 			return null;
 	}
 
-	public List<Map<String, Object>> getEdgeAllProperties(String json) {
+	public List<Map<String, Object>> getEdgeProperties(String json) {
 		JSONObject jsonObject = new JSONObject(json);
 		GraphTraversalSource g = graph.traversal();
 		

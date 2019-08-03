@@ -6,9 +6,11 @@ import org.annihilator.recommendation.db.JanusClient;
 import org.annihilator.recommendation.models.Movie;
 import org.annihilator.recommendation.models.Rating;
 import org.annihilator.recommendation.models.User;
-
 import com.google.gson.Gson;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class LoadMovieLensData {
 
 	static Gson gson = new Gson();
@@ -40,12 +42,14 @@ public class LoadMovieLensData {
 	
 	private static void loadRelationDataToJanus(String data) throws Exception {
 		Rating rating = new Rating();
-		String[] datas = data.split(";", -1);
+		String[] datas = data.split(",", -1);
 		
 		rating.setUserId(datas[0]);
 		rating.setMovieId(datas[1]);
 		rating.setRating(datas[2]);
 		rating.setTimestamp(datas[3]);
+		
+		log.info(datas[0] + "----------------->" + datas[1]);
 		
 		String json = gson.toJson(rating);
 		client.addEdge(json, false);
@@ -73,5 +77,6 @@ public class LoadMovieLensData {
 		}
 		
 		in.close();
+		
 	}
 }

@@ -19,7 +19,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j 
 @Path("/janusEngine")
-
 public class RecommendingEngineController {
 	RecommendationEngineConfiguration config;
 	JanusClient client = new JanusClient();
@@ -75,7 +74,7 @@ public class RecommendingEngineController {
 		List<Map<String, Object>> response = null;
 		JSONObject jsonResponse = null;
     	try {
-			response = client.getVertexAllProperties(json);
+			response = client.getVertexProperties(json);
 
 			if(response.size()!=0)
 				jsonResponse = new JSONObject(response.get(0));
@@ -94,7 +93,7 @@ public class RecommendingEngineController {
 		List<Map<String, Object>> response = null;
 		JSONObject jsonResponse = null;
     	try {
-			response = client.getEdgeAllProperties(json);
+			response = client.getEdgeProperties(json);
 			if(response.size()!=0)
 				jsonResponse = new JSONObject(response.get(0));
 			else

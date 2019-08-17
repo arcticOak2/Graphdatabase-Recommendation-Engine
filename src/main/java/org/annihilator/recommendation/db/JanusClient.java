@@ -15,6 +15,7 @@ import org.janusgraph.core.JanusGraph;
 import org.janusgraph.core.JanusGraphFactory;
 import org.janusgraph.core.JanusGraphTransaction;
 import org.janusgraph.core.TransactionBuilder;
+import org.janusgraph.core.attribute.Text;
 import org.janusgraph.core.schema.JanusGraphManagement;
 import org.janusgraph.diskstorage.BackendException;
 import org.json.JSONObject;
@@ -120,7 +121,7 @@ public class JanusClient {
 			Edge watched = subNode.addEdge("watched", objNode);
 			watched.property("rating", rating);
 			watched.property("timestamp", timestamp);
-			
+
 			mgmt.commit();
 			g.tx().commit();
 			g.close();
@@ -149,7 +150,7 @@ public class JanusClient {
 		} else {
 			log.error("Invalid Input: " + json);
 		}
-
+		
 		if (null != node)
 			return node.valueMap().toList();
 		else
@@ -159,13 +160,25 @@ public class JanusClient {
 	public List<Map<String, Object>> getEdgeProperties(String json) {
 		JSONObject jsonObject = new JSONObject(json);
 		GraphTraversalSource g = graph.traversal();
-		
+
 		String userId = jsonObject.getString("userId");
 		String movieId = jsonObject.getString("movieId");
-		
+
 		GraphTraversal<Vertex, Edge> node = g.V().has("userId", userId).outE().where(__.inV().has("movieId", movieId));
-		
+
 		return node.valueMap().toList();
+	}
+
+	public List<Map<String, Object>> getMovieDetails(String json) {
+		JSONObject jsonObject = new JSONObject(json);
+		GraphTraversalSource g = graph.traversal();
+
+		String movieName = jsonObject.getString("movieName");
+
+		List<Map<String, Object>> node = g.V().has("title", Text.textContains(movieName)).valueMap().toList();
+		
+		
+		return node;
 	}
 
 	// CAUTION:

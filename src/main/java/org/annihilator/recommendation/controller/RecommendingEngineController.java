@@ -13,11 +13,12 @@ import javax.ws.rs.core.Response;
 import org.annihilator.recommendation.config.RecommendationEngineConfiguration;
 import org.annihilator.recommendation.db.JanusClient;
 import org.janusgraph.core.SchemaViolationException;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import lombok.extern.slf4j.Slf4j;
 
-@Slf4j 
+@Slf4j
 @Path("/janusEngine")
 public class RecommendingEngineController {
 	RecommendationEngineConfiguration config;
@@ -62,6 +63,7 @@ public class RecommendingEngineController {
 		try {
 			client.purgeJanus();
 		} catch (Exception e) {
+			e.printStackTrace();
 			return Response.status(500).build();
 		}
 		return Response.ok("{\"message\": \"Purged complete Janus Engine\"}", MediaType.APPLICATION_JSON).build();
@@ -89,19 +91,44 @@ public class RecommendingEngineController {
 	@GET
 	@Path("/getEdgeProperties")
 	@Produces(MediaType.APPLICATION_JSON)
-    public Response getEdge(String json) {
+	public Response getEdge(String json) {
 		List<Map<String, Object>> response = null;
 		JSONObject jsonResponse = null;
-    	try {
+		try {
 			response = client.getEdgeProperties(json);
-			if(response.size()!=0)
+			if (response.size() != 0)
 				jsonResponse = new JSONObject(response.get(0));
 			else
 				log.info("No value exist in database for given input: " + "\n" + json);
 		} catch (Exception e) {
+			e.printStackTrace();
 			return Response.status(500).build();
 		}
-    	
-    	return Response.ok("{\"properties\": " +  jsonResponse + "}", MediaType.APPLICATION_JSON).build();
-    }
+
+		return Response.ok("{\"properties\": " + jsonResponse + "}", MediaType.APPLICATION_JSON).build();
+	}
+
+	@GET
+	@Path("/getMovieDetailsByName")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getMovieDetailsByName(String json) {
+		JSONArray jsonResponse = new JSONArray();
+
+		try {
+			List<Map<String, Object>> movies = client.getMovieDetails(json);
+			JSONObject movieResponse;
+			
+			for(Map<String, Object> movie: movies) {
+				movieResponse = new JSONObject(movie);
+				System.out.println(movieResponse);
+				jsonResponse.put(movieResponse);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			return Response.status(500).build();
+		}
+
+		return Response.ok("{\"movies\": " + jsonResponse + "}", MediaType.APPLICATION_JSON).build();
+
+	}
 }

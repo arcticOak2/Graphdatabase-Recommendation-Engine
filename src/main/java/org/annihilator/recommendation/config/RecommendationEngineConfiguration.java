@@ -6,9 +6,7 @@ import javax.validation.constraints.NotNull;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.dropwizard.Configuration;
-import lombok.Data;
 
-@Data
 public class RecommendationEngineConfiguration extends Configuration {
 	@Valid
 	@NotNull

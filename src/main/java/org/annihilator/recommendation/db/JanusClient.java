@@ -1,8 +1,11 @@
 package org.annihilator.recommendation.db;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 import org.annihilator.recommendation.schema.LoadSchema;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
@@ -73,11 +76,12 @@ public class JanusClient {
 		if (typeOfVertex.equals("movie")) {
 			String genres = jsonObject.getString("genres");
 			String[] genresList = genres.split("\\|");
+			Set<String> genresSet = new HashSet<>(Arrays.asList(genresList));
 			String title = jsonObject.getString("title");
 			String imdbId = jsonObject.getString("imdbId");
 			String tmdbId = jsonObject.getString("tmdbId");
 
-			tx.addVertex(T.label, "Movie", "genres", genresList, "title", title, "movieId", id, "imdbId", imdbId,
+			tx.addVertex(T.label, "Movie", "genres", genresSet, "title", title, "movieId", id, "imdbId", imdbId,
 					"tmdbId", tmdbId);
 
 			tx.commit();
@@ -150,7 +154,7 @@ public class JanusClient {
 		} else {
 			log.error("Invalid Input: " + json);
 		}
-		
+
 		if (null != node)
 			return node.valueMap().toList();
 		else
@@ -176,8 +180,7 @@ public class JanusClient {
 		String movieName = jsonObject.getString("movieName");
 
 		List<Map<String, Object>> node = g.V().has("title", Text.textContains(movieName)).valueMap().toList();
-		
-		
+
 		return node;
 	}
 

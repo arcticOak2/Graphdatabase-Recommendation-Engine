@@ -72,21 +72,21 @@ public class RecommendingEngineController {
 	@GET
 	@Path("/getVertexProperties")
 	@Produces(MediaType.APPLICATION_JSON)
-    public Response getVertex(String json) {
+	public Response getVertex(String json) {
 		List<Map<String, Object>> response = null;
 		JSONObject jsonResponse = null;
-    	try {
+		try {
 			response = client.getVertexProperties(json);
 
-			if(response.size()!=0)
+			if (response.size() != 0)
 				jsonResponse = new JSONObject(response.get(0));
 			else
 				log.info("No value exist in database for given input: " + "\n" + json);
 		} catch (Exception e) {
 			return Response.status(500).build();
 		}
-    	return Response.ok("{\"properties\": " +  jsonResponse + "}", MediaType.APPLICATION_JSON).build();
-    }
+		return Response.ok("{\"properties\": " + jsonResponse + "}", MediaType.APPLICATION_JSON).build();
+	}
 
 	@GET
 	@Path("/getEdgeProperties")
@@ -117,8 +117,8 @@ public class RecommendingEngineController {
 		try {
 			List<Map<String, Object>> movies = client.getMovieDetails(json);
 			JSONObject movieResponse;
-			
-			for(Map<String, Object> movie: movies) {
+
+			for (Map<String, Object> movie : movies) {
 				movieResponse = new JSONObject(movie);
 				System.out.println(movieResponse);
 				jsonResponse.put(movieResponse);

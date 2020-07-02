@@ -1,5 +1,6 @@
 package org.annihilator.recommendation.controller;
 
+import com.google.gson.Gson;
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.Consumes;
@@ -11,15 +12,27 @@ import javax.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 import org.annihilator.recommendation.config.RecommendationEngineConfiguration;
 import org.annihilator.recommendation.db.JanusClient;
+import org.annihilator.recommendation.models.EdgePropsReqDTO;
+import org.annihilator.recommendation.models.Movie;
+import org.annihilator.recommendation.models.MovieByNameReqDTO;
+import org.annihilator.recommendation.models.Rating;
+import org.annihilator.recommendation.models.ResponseStructure;
+import org.annihilator.recommendation.models.User;
+import org.annihilator.recommendation.models.VertexPropsReqDTO;
 import org.janusgraph.core.SchemaViolationException;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Slf4j
 @Path("/janus_engine")
 @Produces({MediaType.APPLICATION_JSON})
 @Consumes({MediaType.APPLICATION_JSON})
 public class RecommendingEngineController {
+
+  private static final Logger logger;
+  private static final Gson gson;
 
   RecommendationEngineConfiguration config;
   JanusClient client = new JanusClient();
@@ -28,23 +41,104 @@ public class RecommendingEngineController {
     this.config = config;
   }
 
+  static {
+    logger = LoggerFactory.getLogger(RecommendingEngineController.class);
+    gson = new Gson();
+  }
+
+  private boolean isMovieValid(Movie movie) {
+    if (null == movie.getId()
+        || null == movie.getGenres()
+        || null == movie.getTitle()
+        || null == movie.getImdbId()
+        || null == movie.getTmdbId()) {
+      return false;
+    }
+
+    return true;
+  }
+
+  private boolean isUserValid(User user) {
+    if (null == user.getId()) {
+      return false;
+    }
+
+    return true;
+  }
+
+  private boolean isEdgeValid(Rating edge) {
+    if (null == edge.getMovieId()
+        || null == edge.getRating()
+        || null == edge.getTimestamp()
+        || null == edge.getUserId()) {
+      return false;
+    }
+
+    return true;
+  }
+
+  private boolean isVertexPropsReqValid(VertexPropsReqDTO dto) {
+    if (null == dto.getMovieId() && null == dto.getUserId()) {
+      return false;
+    }
+
+    return true;
+  }
+
+  private boolean isEdgePropsReqValid(EdgePropsReqDTO dto) {
+    if (null == dto.getMovieId() || null == dto.getUserId()) {
+      return false;
+    }
+
+    return true;
+  }
+
   @POST
-  @Path("/add_vertex")
+  @Path("/add_movie")
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes({MediaType.APPLICATION_JSON})
-  public Response appendVertex(String json) {
-    try {
-      client.addNode(json, false);
-    } catch (SchemaViolationException e) {
-      return Response
-          .ok("{\"message\": \"Vertex already exist with same Id\"}", MediaType.APPLICATION_JSON)
+  public Response addMovie(String rawBody) {
+
+    Movie movie = gson.fromJson(rawBody, Movie.class);
+
+    if (isMovieValid(movie)) {
+      try {
+        client.addMovie(movie, false);
+      } catch (SchemaViolationException e) {
+        return Response.ok(gson.toJson(ResponseStructure.getDataExistResponse())).build();
+      } catch (Exception e) {
+        e.printStackTrace();
+        return Response.status(500).build();
+      }
+      return Response.ok(gson.toJson(ResponseStructure.getSuccessResponse())).build();
+    } else {
+      return Response.status(422).entity(gson.toJson(ResponseStructure.getInvalidInputResponse()))
           .build();
-    } catch (Exception e) {
-      e.printStackTrace();
-      return Response.status(500).build();
     }
-    return Response.ok("{\"message\": \"Vertex added successfully\"}", MediaType.APPLICATION_JSON)
-        .build();
+  }
+
+  @POST
+  @Path("/add_user")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Consumes({MediaType.APPLICATION_JSON})
+  public Response addUser(String rawBody) {
+
+    User user = gson.fromJson(rawBody, User.class);
+
+    if (isUserValid(user)) {
+      try {
+        client.addUser(user, false);
+      } catch (SchemaViolationException e) {
+        return Response.ok(gson.toJson(ResponseStructure.getDataExistResponse())).build();
+      } catch (Exception e) {
+        logger.error("Error while ingesting user to the database", e);
+        return Response.status(500).build();
+      }
+      return Response.ok(gson.toJson(ResponseStructure.getSuccessResponse())).build();
+    } else {
+      return Response.status(422).entity(gson.toJson(ResponseStructure.getInvalidInputResponse()))
+          .build();
+    }
   }
 
   @POST
@@ -52,13 +146,21 @@ public class RecommendingEngineController {
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes({MediaType.APPLICATION_JSON})
   public Response appendEdge(String json) {
-    try {
-      client.addEdge(json, false);
-    } catch (Exception e) {
-      return Response.status(500).build();
+
+    Rating edge = gson.fromJson(json, Rating.class);
+    if (isEdgeValid(edge)) {
+      try {
+        client.addEdge(edge, false);
+      } catch (Exception e) {
+        logger.error("Error while creating edge", e);
+        return Response.status(500).build();
+      }
+    } else {
+      return Response.status(422).entity(gson.toJson(ResponseStructure.getInvalidInputResponse()))
+          .build();
     }
-    return Response.ok("{\"message\": \"Edge added successfully\"}", MediaType.APPLICATION_JSON)
-        .build();
+
+    return Response.ok(ResponseStructure.getSuccessResponse()).build();
   }
 
   @POST
@@ -72,8 +174,8 @@ public class RecommendingEngineController {
       e.printStackTrace();
       return Response.status(500).build();
     }
-    return Response
-        .ok("{\"message\": \"Purged complete Janus Engine\"}", MediaType.APPLICATION_JSON).build();
+
+    return Response.ok(ResponseStructure.getSuccessResponse()).build();
   }
 
   @POST
@@ -81,21 +183,23 @@ public class RecommendingEngineController {
   @Produces({MediaType.APPLICATION_JSON})
   @Consumes({MediaType.APPLICATION_JSON})
   public Response getVertex(String json) {
-    List<Map<Object, Object>> response = null;
-    JSONObject jsonResponse = null;
-    try {
-      response = client.getVertexProperties(json);
+
+    VertexPropsReqDTO dto = gson.fromJson(json, VertexPropsReqDTO.class);
+    if (isVertexPropsReqValid(dto)) {
+      List<Map<Object, Object>> response = client.getVertexProperties(dto);
 
       if (response.size() != 0) {
-        jsonResponse = new JSONObject(response.get(0));
+        return Response.ok(gson
+            .toJson(ResponseStructure
+                .getSuccessResponseWithBody(null, new JSONObject(response.get(0)).toString())))
+            .build();
       } else {
-        log.info("No value exist in database for given input: " + "\n" + json);
+        return Response.ok(gson.toJson(ResponseStructure.getNotFoundResponse())).build();
       }
-    } catch (Exception e) {
-      return Response.status(500).build();
+    } else {
+      return Response.status(422).entity(gson.toJson(ResponseStructure.getInvalidInputResponse()))
+          .build();
     }
-    return Response.ok("{\"properties\": " + jsonResponse + "}", MediaType.APPLICATION_JSON)
-        .build();
   }
 
   @POST
@@ -103,22 +207,21 @@ public class RecommendingEngineController {
   @Produces({MediaType.APPLICATION_JSON})
   @Consumes({MediaType.APPLICATION_JSON})
   public Response getEdge(String json) {
-    List<Map<Object, Object>> response = null;
-    JSONObject jsonResponse = null;
-    try {
-      response = client.getEdgeProperties(json);
-      if (response.size() != 0) {
-        jsonResponse = new JSONObject(response.get(0));
-      } else {
-        log.info("No value exist in database for given input: " + "\n" + json);
-      }
-    } catch (Exception e) {
-      e.printStackTrace();
-      return Response.status(500).build();
-    }
 
-    return Response.ok("{\"properties\": " + jsonResponse + "}", MediaType.APPLICATION_JSON)
-        .build();
+    EdgePropsReqDTO dto = gson.fromJson(json, EdgePropsReqDTO.class);
+
+    if (isEdgePropsReqValid(dto)) {
+      List<Map<Object, Object>> response = client.getEdgeProperties(dto);
+      if (response.size() != 0) {
+        return Response.ok(new JSONObject(response.get(0)).toString()).build();
+      } else {
+        log.info("No value exist in database for given input");
+        return Response.ok(gson.toJson(ResponseStructure.getNotFoundResponse())).build();
+      }
+    } else {
+      return Response.status(422).entity(gson.toJson(ResponseStructure.getInvalidInputResponse()))
+          .build();
+    }
   }
 
   @POST
@@ -126,24 +229,30 @@ public class RecommendingEngineController {
   @Produces({MediaType.APPLICATION_JSON})
   @Consumes({MediaType.APPLICATION_JSON})
   public Response getMovieDetailsByName(String json) {
-    JSONArray jsonResponse = new JSONArray();
 
-    try {
-      List<Map<Object, Object>> movies = client.getMovieDetails(json);
+    MovieByNameReqDTO dto = gson.fromJson(json, MovieByNameReqDTO.class);
+
+    if(null != dto.getMovieName()) {
+      List<Map<Object, Object>> movies = client.getMovieDetails(dto);
+
+      if (movies.size() == 0) {
+        return Response.ok(gson.toJson(ResponseStructure.getNotFoundResponse())).build();
+      }
+
       JSONObject movieResponse;
 
+      JSONArray jsonResponse = new JSONArray();
       for (Map<Object, Object> movie : movies) {
         movieResponse = new JSONObject(movie);
-        System.out.println(movieResponse);
         jsonResponse.put(movieResponse);
       }
-    } catch (Exception e) {
-      e.printStackTrace();
-      return Response.status(500).build();
+
+      return Response.ok(gson
+          .toJson(ResponseStructure.getSuccessResponseWithBody(null, jsonResponse.toString())))
+          .build();
     }
 
-    return Response.ok("{\"movies\": " + jsonResponse + "}", MediaType.APPLICATION_JSON).build();
-
+    return Response.status(422).entity(gson.toJson(ResponseStructure.getInvalidInputResponse())).build();
   }
 
   @POST

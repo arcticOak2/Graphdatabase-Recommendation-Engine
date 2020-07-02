@@ -25,8 +25,7 @@ public class LoadMovieLensData {
     movie.setImdbId(datas[3]);
     movie.setTmdbId(datas[4]);
 
-    String json = gson.toJson(movie);
-    client.addNode(json, true);
+    client.addMovie(movie, true);
 
   }
 
@@ -35,8 +34,7 @@ public class LoadMovieLensData {
 
     user.setId(id);
 
-    String json = gson.toJson(user);
-    client.addNode(json, true);
+    client.addUser(user, true);
   }
 
   private static void loadRelationDataToJanus(String data) throws Exception {
@@ -51,7 +49,7 @@ public class LoadMovieLensData {
     log.info(datas[0] + "----------------->" + datas[1]);
 
     String json = gson.toJson(rating);
-    client.addEdge(json, false);
+    client.addEdge(rating, false);
   }
 
   public static void main(String[] args) throws Exception {

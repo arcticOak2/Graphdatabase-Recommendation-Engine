@@ -7,6 +7,12 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
+import org.annihilator.recommendation.models.EdgePropsReqDTO;
+import org.annihilator.recommendation.models.Movie;
+import org.annihilator.recommendation.models.MovieByNameReqDTO;
+import org.annihilator.recommendation.models.Rating;
+import org.annihilator.recommendation.models.User;
+import org.annihilator.recommendation.models.VertexPropsReqDTO;
 import org.annihilator.recommendation.schema.LoadSchema;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
@@ -18,10 +24,8 @@ import org.janusgraph.core.JanusGraph;
 import org.janusgraph.core.JanusGraphFactory;
 import org.janusgraph.core.JanusGraphTransaction;
 import org.janusgraph.core.TransactionBuilder;
-import org.janusgraph.core.attribute.Text;
 import org.janusgraph.core.schema.JanusGraphManagement;
 import org.janusgraph.diskstorage.BackendException;
-import org.json.JSONObject;
 
 @Slf4j
 public class JanusClient {
@@ -40,69 +44,53 @@ public class JanusClient {
     LoadSchema.loadSchema(graph);
   }
 
-  public JanusGraphTransaction enableBatchLoading() {
-    log.info("Batch Loading enabled!");
-    TransactionBuilder builder = graph.buildTransaction();
-    JanusGraphTransaction tx = builder.enableBatchLoading().consistencyChecks(false).start();
-    return tx;
-  }
+  private JanusGraphTransaction getTransaction(boolean bulkMode) {
 
-  public boolean addNode(String json, boolean bulkMode) throws Exception {
-
-    JSONObject jsonObject = new JSONObject(json);
-
-    /**
-     * There can be two types of json:
-     *
-     * 1. Movie a. genres b. title c. movieId d. imdbId e. tmdbId
-     *
-     * 2. User a. userId
-     */
-
-    String typeOfVertex = jsonObject.getString("type");
     JanusGraphTransaction tx = null;
+
     if (!bulkMode) {
       tx = graph.newTransaction();
     } else {
       tx = enableBatchLoading();
     }
-    String id = jsonObject.getString("id");
 
-    if (typeOfVertex.equals("movie")) {
-      String genres = jsonObject.getString("genres");
-      String[] genresList = genres.split("\\|");
-      Set<String> genresSet = new HashSet<>(Arrays.asList(genresList));
-      String title = jsonObject.getString("title");
-      String imdbId = jsonObject.getString("imdbId");
-      String tmdbId = jsonObject.getString("tmdbId");
-
-      tx.addVertex(T.label, "Movie", "genres", genresSet, "title", title, "movieId", id, "imdbId",
-          imdbId, "tmdbId", tmdbId);
-
-      tx.commit();
-      log.info("id: " + id + " added!");
-
-      return true;
-    } else if (typeOfVertex.equals("user")) {
-      tx.addVertex(T.label, "User", "userId", id);
-      tx.commit();
-
-      return true;
-    } else {
-      log.error("Unrecognized type of vertex");
-
-      return false;
-    }
+    return tx;
   }
 
-  public boolean addEdge(String json, boolean bulkMode) throws Exception {
+  public JanusGraphTransaction enableBatchLoading() {
+    log.info("Batch Loading enabled!");
+    TransactionBuilder builder = graph.buildTransaction();
+    JanusGraphTransaction tx = builder.enableBatchLoading().consistencyChecks(false).start();
 
-    JSONObject jsonObject = new JSONObject(json);
+    return tx;
+  }
 
-    String userId = jsonObject.getString("userId");
-    String movieId = jsonObject.getString("movieId");
-    String rating = jsonObject.getString("rating");
-    String timestamp = jsonObject.getString("timestamp");
+  public void addMovie(Movie movie, boolean bulkMode) throws Exception {
+
+    JanusGraphTransaction tx = getTransaction(bulkMode);
+
+    String[] genresList = movie.getGenres().split("\\|");
+    Set<String> genresSet = new HashSet<>(Arrays.asList(genresList));
+
+    tx.addVertex(T.label, "MOVIE",
+        "genres", genresSet,
+        "title", movie.getTitle().toLowerCase(),
+        "movie_id", movie.getId(),
+        "imdb_id", movie.getImdbId(),
+        "tmdb_id", movie.getTmdbId());
+
+    tx.commit();
+  }
+
+  public void addUser(User user, boolean bulkMode) throws Exception {
+
+    JanusGraphTransaction tx = getTransaction(bulkMode);
+
+    tx.addVertex(T.label, "USER", "user_id", user.getId());
+    tx.commit();
+  }
+
+  public void addEdge(Rating edge, boolean bulkMode) throws Exception {
 
     JanusGraphManagement mgmt = graph.openManagement();
     GraphTraversalSource g = graph.traversal();
@@ -111,74 +99,57 @@ public class JanusClient {
     Vertex objNode = null;
 
     try {
-      subNode = g.V().has("userId", userId).next();
-      objNode = g.V().has("movieId", movieId).next();
+      subNode = g.V().has("user_id", edge.getUserId()).next();
+      objNode = g.V().has("movie_id", edge.getMovieId()).next();
     } catch (NoSuchElementException e) {
       log.error("Either both of them or none of them exist in database!");
-      return false;
     }
     if (null != subNode && null != objNode) {
       Edge watched = subNode.addEdge("watched", objNode);
-      watched.property("rating", rating);
-      watched.property("timestamp", timestamp);
+      watched.property("rating", edge.getRating());
+      watched.property("timestamp", edge.getTimestamp());
 
       mgmt.commit();
       g.tx().commit();
       g.close();
-
-      return true;
-    } else {
-      mgmt.commit();
-      g.tx().commit();
-      g.close();
-
-      return false;
     }
   }
 
-  public List<Map<Object, Object>> getVertexProperties(String json) {
-    JSONObject jsonObject = new JSONObject(json);
-    String id;
+  public List<Map<Object, Object>> getVertexProperties(VertexPropsReqDTO dto) {
+
     GraphTraversal<Vertex, Vertex> node = null;
     GraphTraversalSource g = graph.traversal();
-    if (!jsonObject.isNull("userId")) {
-      id = jsonObject.getString("userId");
-      node = g.V().has("userId", id);
-    } else if (!jsonObject.isNull("movieId")) {
-      id = jsonObject.getString("movieId");
-      node = g.V().has("movieId", id);
+    if (null == dto.getMovieId()) {
+      node = g.V().has("user_id", dto.getUserId());
     } else {
-      log.error("Invalid Input: " + json);
+      node = g.V().has("movie_id", dto.getMovieId());
     }
 
-    if (null != node) {
-      return node.valueMap().toList();
-    } else {
-      return null;
-    }
+    return node.local(__.properties().group().by(__.key()).by(__.value()))
+        .dedup()
+        .toList();
   }
 
-  public List<Map<Object, Object>> getEdgeProperties(String json) {
-    JSONObject jsonObject = new JSONObject(json);
+  public List<Map<Object, Object>> getEdgeProperties(EdgePropsReqDTO dto) {
     GraphTraversalSource g = graph.traversal();
-
-    String userId = jsonObject.getString("userId");
-    String movieId = jsonObject.getString("movieId");
 
     GraphTraversal<Vertex, Edge> node =
-        g.V().has("userId", userId).outE().where(__.inV().has("movieId", movieId));
+        g.V().has("user_id", dto.getUserId()).outE()
+            .where(__.inV().has("movie_id", dto.getMovieId()));
 
-    return node.valueMap().toList();
+    return node.local(__.properties().group().by(__.key()).by(__.value()))
+        .dedup()
+        .toList();
   }
 
-  public List<Map<Object, Object>> getMovieDetails(String json) {
-    JSONObject jsonObject = new JSONObject(json);
+  public List<Map<Object, Object>> getMovieDetails(MovieByNameReqDTO dto) {
+
     GraphTraversalSource g = graph.traversal();
 
-    String movieName = jsonObject.getString("movieName");
-
-    List<Map<Object, Object>> node =
-        g.V().has("title", Text.textContains(movieName)).valueMap().toList();
+    List<Map<Object, Object>> node = g.V().has("title", dto.getMovieName().toLowerCase())
+        .local(__.properties().group().by(__.key()).by(__.value()))
+        .dedup()
+        .toList();
 
     return node;
   }

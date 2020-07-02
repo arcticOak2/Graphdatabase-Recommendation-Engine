@@ -147,7 +147,7 @@ This project can be used for the movie recommendation and by the following same 
 ABOUT ME
 ---
 
-I'm a Distributed System Engineer. 
+I love coming up with elegant simple solutions to solve the most complex problems. I find joy and satisfaction in building a solution, that is intuitive and simple on its surface and yet complex and intelligent at its core. 
 
 Checkout my social profiles for more information:
 

@@ -82,12 +82,13 @@ To start the API run `org.annihilator.recommendation.controller.RecommendationEn
 
 ```
 POST    /janus_engine/add_edge (org.annihilator.recommendation.controller.RecommendingEngineController)
-POST    /janus_engine/add_vertex (org.annihilator.recommendation.controller.RecommendingEngineController)
+POST    /janus_engine/add_movie (org.annihilator.recommendation.controller.RecommendingEngineController)
+POST    /janus_engine/add_user (org.annihilator.recommendation.controller.RecommendingEngineController)
 POST    /janus_engine/get_edge_properties (org.annihilator.recommendation.controller.RecommendingEngineController)
 POST    /janus_engine/get_movie_details_by_name (org.annihilator.recommendation.controller.RecommendingEngineController)
-(Work in progress) POST    /janus_engine/get_similar_movies (org.annihilator.recommendation.controller.RecommendingEngineController)
 POST    /janus_engine/get_vertex_properties (org.annihilator.recommendation.controller.RecommendingEngineController)
 POST    /janus_engine/purge (org.annihilator.recommendation.controller.RecommendingEngineController)
+(Work in Progress)POST    /janus_engine/get_similar_movies (org.annihilator.recommendation.controller.RecommendingEngineController)
 ```
 
 Postman Collection

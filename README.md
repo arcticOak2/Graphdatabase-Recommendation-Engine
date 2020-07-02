@@ -80,6 +80,7 @@ ___
 
 To start the API run `org.annihilator.recommendation.controller.RecommendationEngineController.java` with argument parameter `server config/engine.yaml`.
 
+```
 POST    /janus_engine/add_edge (org.annihilator.recommendation.controller.RecommendingEngineController)
 POST    /janus_engine/add_vertex (org.annihilator.recommendation.controller.RecommendingEngineController)
 POST    /janus_engine/get_edge_properties (org.annihilator.recommendation.controller.RecommendingEngineController)
@@ -87,6 +88,7 @@ POST    /janus_engine/get_movie_details_by_name (org.annihilator.recommendation.
 (Work in progress) POST    /janus_engine/get_similar_movies (org.annihilator.recommendation.controller.RecommendingEngineController)
 POST    /janus_engine/get_vertex_properties (org.annihilator.recommendation.controller.RecommendingEngineController)
 POST    /janus_engine/purge (org.annihilator.recommendation.controller.RecommendingEngineController)
+```
 
 Postman Collection
 ---

@@ -1,5 +1,6 @@
 package org.annihilator.recommendation.schema;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.janusgraph.core.Cardinality;
 import org.janusgraph.core.JanusGraph;
@@ -9,7 +10,6 @@ import org.janusgraph.core.SchemaViolationException;
 import org.janusgraph.core.schema.ConsistencyModifier;
 import org.janusgraph.core.schema.JanusGraphIndex;
 import org.janusgraph.core.schema.JanusGraphManagement;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class LoadSchema {

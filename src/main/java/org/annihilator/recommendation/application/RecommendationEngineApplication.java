@@ -1,9 +1,9 @@
 package org.annihilator.recommendation.application;
 
-import org.annihilator.recommendation.config.RecommendationEngineConfiguration;
-import org.annihilator.recommendation.controller.RecommendingEngineController;
 import io.dropwizard.Application;
 import io.dropwizard.setup.Environment;
+import org.annihilator.recommendation.config.RecommendationEngineConfiguration;
+import org.annihilator.recommendation.controller.RecommendingEngineController;
 
 public class RecommendationEngineApplication
     extends Application<RecommendationEngineConfiguration> {
@@ -17,5 +17,4 @@ public class RecommendationEngineApplication
       final Environment environment) {
     environment.jersey().register(new RecommendingEngineController(configuration));
   }
-
 }

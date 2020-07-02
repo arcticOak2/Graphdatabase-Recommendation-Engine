@@ -1,13 +1,13 @@
 package org.annihilator.recommendation.core;
 
+import com.google.gson.Gson;
 import java.io.BufferedReader;
 import java.io.FileReader;
+import lombok.extern.slf4j.Slf4j;
 import org.annihilator.recommendation.db.JanusClient;
 import org.annihilator.recommendation.models.Movie;
 import org.annihilator.recommendation.models.Rating;
 import org.annihilator.recommendation.models.User;
-import com.google.gson.Gson;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class LoadMovieLensData {

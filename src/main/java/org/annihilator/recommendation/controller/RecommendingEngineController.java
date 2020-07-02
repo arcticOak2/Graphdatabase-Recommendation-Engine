@@ -2,22 +2,25 @@ package org.annihilator.recommendation.controller;
 
 import java.util.List;
 import java.util.Map;
-import javax.ws.rs.GET;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import lombok.extern.slf4j.Slf4j;
 import org.annihilator.recommendation.config.RecommendationEngineConfiguration;
 import org.annihilator.recommendation.db.JanusClient;
 import org.janusgraph.core.SchemaViolationException;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@Path("/janusEngine")
+@Path("/janus_engine")
+@Produces({MediaType.APPLICATION_JSON})
+@Consumes({MediaType.APPLICATION_JSON})
 public class RecommendingEngineController {
+
   RecommendationEngineConfiguration config;
   JanusClient client = new JanusClient();
 
@@ -26,8 +29,9 @@ public class RecommendingEngineController {
   }
 
   @POST
-  @Path("/addVertex")
+  @Path("/add_vertex")
   @Produces(MediaType.APPLICATION_JSON)
+  @Consumes({MediaType.APPLICATION_JSON})
   public Response appendVertex(String json) {
     try {
       client.addNode(json, false);
@@ -44,8 +48,9 @@ public class RecommendingEngineController {
   }
 
   @POST
-  @Path("/addEdge")
+  @Path("/add_edge")
   @Produces(MediaType.APPLICATION_JSON)
+  @Consumes({MediaType.APPLICATION_JSON})
   public Response appendEdge(String json) {
     try {
       client.addEdge(json, false);
@@ -58,7 +63,8 @@ public class RecommendingEngineController {
 
   @POST
   @Path("/purge")
-  @Produces(MediaType.APPLICATION_JSON)
+  @Produces({MediaType.APPLICATION_JSON})
+  @Consumes({MediaType.APPLICATION_JSON})
   public Response purgeEngine() {
     try {
       client.purgeJanus();
@@ -70,19 +76,21 @@ public class RecommendingEngineController {
         .ok("{\"message\": \"Purged complete Janus Engine\"}", MediaType.APPLICATION_JSON).build();
   }
 
-  @GET
-  @Path("/getVertexProperties")
-  @Produces(MediaType.APPLICATION_JSON)
+  @POST
+  @Path("/get_vertex_properties")
+  @Produces({MediaType.APPLICATION_JSON})
+  @Consumes({MediaType.APPLICATION_JSON})
   public Response getVertex(String json) {
-    List<Map<String, Object>> response = null;
+    List<Map<Object, Object>> response = null;
     JSONObject jsonResponse = null;
     try {
       response = client.getVertexProperties(json);
 
-      if (response.size() != 0)
+      if (response.size() != 0) {
         jsonResponse = new JSONObject(response.get(0));
-      else
+      } else {
         log.info("No value exist in database for given input: " + "\n" + json);
+      }
     } catch (Exception e) {
       return Response.status(500).build();
     }
@@ -90,18 +98,20 @@ public class RecommendingEngineController {
         .build();
   }
 
-  @GET
-  @Path("/getEdgeProperties")
-  @Produces(MediaType.APPLICATION_JSON)
+  @POST
+  @Path("/get_edge_properties")
+  @Produces({MediaType.APPLICATION_JSON})
+  @Consumes({MediaType.APPLICATION_JSON})
   public Response getEdge(String json) {
-    List<Map<String, Object>> response = null;
+    List<Map<Object, Object>> response = null;
     JSONObject jsonResponse = null;
     try {
       response = client.getEdgeProperties(json);
-      if (response.size() != 0)
+      if (response.size() != 0) {
         jsonResponse = new JSONObject(response.get(0));
-      else
+      } else {
         log.info("No value exist in database for given input: " + "\n" + json);
+      }
     } catch (Exception e) {
       e.printStackTrace();
       return Response.status(500).build();
@@ -111,17 +121,18 @@ public class RecommendingEngineController {
         .build();
   }
 
-  @GET
-  @Path("/getMovieDetailsByName")
-  @Produces(MediaType.APPLICATION_JSON)
+  @POST
+  @Path("/get_movie_details_by_name")
+  @Produces({MediaType.APPLICATION_JSON})
+  @Consumes({MediaType.APPLICATION_JSON})
   public Response getMovieDetailsByName(String json) {
     JSONArray jsonResponse = new JSONArray();
 
     try {
-      List<Map<String, Object>> movies = client.getMovieDetails(json);
+      List<Map<Object, Object>> movies = client.getMovieDetails(json);
       JSONObject movieResponse;
 
-      for (Map<String, Object> movie : movies) {
+      for (Map<Object, Object> movie : movies) {
         movieResponse = new JSONObject(movie);
         System.out.println(movieResponse);
         jsonResponse.put(movieResponse);
@@ -133,5 +144,14 @@ public class RecommendingEngineController {
 
     return Response.ok("{\"movies\": " + jsonResponse + "}", MediaType.APPLICATION_JSON).build();
 
+  }
+
+  @POST
+  @Path("/get_similar_movies")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Consumes({MediaType.APPLICATION_JSON})
+  public Response getSimilarMovies() {
+
+    return null;
   }
 }

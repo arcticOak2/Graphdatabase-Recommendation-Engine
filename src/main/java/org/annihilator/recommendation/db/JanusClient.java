@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
 import org.annihilator.recommendation.schema.LoadSchema;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
@@ -21,19 +22,16 @@ import org.janusgraph.core.attribute.Text;
 import org.janusgraph.core.schema.JanusGraphManagement;
 import org.janusgraph.diskstorage.BackendException;
 import org.json.JSONObject;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class JanusClient {
 
   /**
-   * 
    * This class is to upload data in bulk to the JanusGraph. Enabling the storage.batch-loading
    * configuration option will have the biggest positive impact on bulk loading times for most
    * applications. So, make sure you enabled this option in Janus configuration.
-   * 
+   * <p>
    * Author: Abhijeet Kumar, Distributed Systems Engineer
-   * 
    */
 
   JanusGraph graph = JanusGraphFactory.open("config/janusgraph-cql-es.properties");
@@ -55,17 +53,17 @@ public class JanusClient {
 
     /**
      * There can be two types of json:
-     * 
+     *
      * 1. Movie a. genres b. title c. movieId d. imdbId e. tmdbId
-     * 
+     *
      * 2. User a. userId
      */
 
     String typeOfVertex = jsonObject.getString("type");
     JanusGraphTransaction tx = null;
-    if (!bulkMode)
+    if (!bulkMode) {
       tx = graph.newTransaction();
-    else {
+    } else {
       tx = enableBatchLoading();
     }
     String id = jsonObject.getString("id");
@@ -98,6 +96,7 @@ public class JanusClient {
   }
 
   public boolean addEdge(String json, boolean bulkMode) throws Exception {
+
     JSONObject jsonObject = new JSONObject(json);
 
     String userId = jsonObject.getString("userId");
@@ -137,7 +136,7 @@ public class JanusClient {
     }
   }
 
-  public List<Map<String, Object>> getVertexProperties(String json) {
+  public List<Map<Object, Object>> getVertexProperties(String json) {
     JSONObject jsonObject = new JSONObject(json);
     String id;
     GraphTraversal<Vertex, Vertex> node = null;
@@ -152,13 +151,14 @@ public class JanusClient {
       log.error("Invalid Input: " + json);
     }
 
-    if (null != node)
+    if (null != node) {
       return node.valueMap().toList();
-    else
+    } else {
       return null;
+    }
   }
 
-  public List<Map<String, Object>> getEdgeProperties(String json) {
+  public List<Map<Object, Object>> getEdgeProperties(String json) {
     JSONObject jsonObject = new JSONObject(json);
     GraphTraversalSource g = graph.traversal();
 
@@ -171,13 +171,13 @@ public class JanusClient {
     return node.valueMap().toList();
   }
 
-  public List<Map<String, Object>> getMovieDetails(String json) {
+  public List<Map<Object, Object>> getMovieDetails(String json) {
     JSONObject jsonObject = new JSONObject(json);
     GraphTraversalSource g = graph.traversal();
 
     String movieName = jsonObject.getString("movieName");
 
-    List<Map<String, Object>> node =
+    List<Map<Object, Object>> node =
         g.V().has("title", Text.textContains(movieName)).valueMap().toList();
 
     return node;

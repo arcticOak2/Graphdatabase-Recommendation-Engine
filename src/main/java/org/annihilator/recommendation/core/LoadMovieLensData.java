@@ -8,12 +8,16 @@ import org.annihilator.recommendation.db.JanusClient;
 import org.annihilator.recommendation.models.Movie;
 import org.annihilator.recommendation.models.Rating;
 import org.annihilator.recommendation.models.User;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Slf4j
 public class LoadMovieLensData {
 
-  static Gson gson = new Gson();
-  static JanusClient client = new JanusClient();
+  private static final Logger logger = LoggerFactory.getLogger(LoadMovieLensData.class);
+
+  private static Gson gson = new Gson();
+  private static JanusClient client = new JanusClient();
 
   private static void loadMoviesDataToJanus(String data) throws Exception {
     String[] datas = data.split(";", -1);
@@ -41,15 +45,19 @@ public class LoadMovieLensData {
     Rating rating = new Rating();
     String[] datas = data.split(",", -1);
 
-    rating.setUserId(datas[0]);
-    rating.setMovieId(datas[1]);
-    rating.setRating(datas[2]);
-    rating.setTimestamp(datas[3]);
+    try {
+      rating.setUserId(datas[0]);
+      rating.setMovieId(datas[1]);
+      rating.setRating(Integer.parseInt(datas[2]));
+      rating.setTimestamp(datas[3]);
 
-    log.info(datas[0] + "----------------->" + datas[1]);
+      log.info(datas[0] + "----------------->" + datas[1]);
 
-    String json = gson.toJson(rating);
-    client.addEdge(rating, false);
+      String json = gson.toJson(rating);
+      client.addEdge(rating, false);
+    } catch (Exception e) {
+      logger.error("error while parsing: " + data);
+    }
   }
 
   public static void main(String[] args) throws Exception {

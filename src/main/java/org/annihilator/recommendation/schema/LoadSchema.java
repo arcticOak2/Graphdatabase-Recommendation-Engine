@@ -1,8 +1,12 @@
 package org.annihilator.recommendation.schema;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.tinkerpop.gremlin.process.traversal.Order;
+import org.apache.tinkerpop.gremlin.structure.Direction;
+import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.janusgraph.core.Cardinality;
+import org.janusgraph.core.EdgeLabel;
 import org.janusgraph.core.JanusGraph;
 import org.janusgraph.core.Multiplicity;
 import org.janusgraph.core.PropertyKey;
@@ -16,55 +20,95 @@ public class LoadSchema {
 
   public static void loadSchema(JanusGraph graph) {
     graph.tx().rollback(); // Never create new indexes while a transaction is active
-    JanusGraphManagement mgmt = graph.openManagement();
+    JanusGraphManagement janusGraphManagement = graph.openManagement();
     try {
-      // Properties key for movie Vertex Label
-      final PropertyKey movieId = mgmt.makePropertyKey("movieId").dataType(String.class).make();
-      mgmt.makePropertyKey("genres").dataType(String.class).cardinality(Cardinality.SET).make();
-      final PropertyKey title = mgmt.makePropertyKey("title").dataType(String.class).make();
-      final PropertyKey imdbId = mgmt.makePropertyKey("imdbId").dataType(String.class).make();
-      final PropertyKey tmdbId = mgmt.makePropertyKey("tmdbId").dataType(String.class).make();
 
-      // Properties key for Watched Edge Label
-      final PropertyKey userId = mgmt.makePropertyKey("userId").dataType(String.class).make();
-      mgmt.makePropertyKey("rating").dataType(String.class).make();
-      mgmt.makePropertyKey("timestamp").dataType(String.class).make();
+      // Vertex properties keys
 
-      JanusGraphManagement.IndexBuilder movieIdIndexBuilder =
-          mgmt.buildIndex("movieId", Vertex.class).addKey(movieId);
-      JanusGraphManagement.IndexBuilder titleIndexBuilder =
-          mgmt.buildIndex("title", Vertex.class).addKey(title);
-      JanusGraphManagement.IndexBuilder imdbIdIndexBuilder =
-          mgmt.buildIndex("imdbId", Vertex.class).addKey(imdbId);
-      JanusGraphManagement.IndexBuilder tmdbIdIndexBuilder =
-          mgmt.buildIndex("tmdbId", Vertex.class).addKey(tmdbId);
-      JanusGraphManagement.IndexBuilder userIdIndexBuilder =
-          mgmt.buildIndex("userId", Vertex.class).addKey(userId);
+      final PropertyKey movieId = janusGraphManagement
+          .makePropertyKey("movie_id")
+          .dataType(String.class)
+          .cardinality(Cardinality.SINGLE)
+          .make();
 
-      movieIdIndexBuilder.unique();
-      imdbIdIndexBuilder.unique();
-      tmdbIdIndexBuilder.unique();
-      userIdIndexBuilder.unique();
+      final PropertyKey genres = janusGraphManagement
+          .makePropertyKey("genres")
+          .dataType(String.class)
+          .cardinality(Cardinality.SET)
+          .make();
 
-      JanusGraphIndex movieIndex = movieIdIndexBuilder.buildCompositeIndex();
-      titleIndexBuilder.buildMixedIndex("search");
-      JanusGraphIndex imdbIndex = imdbIdIndexBuilder.buildCompositeIndex();
-      JanusGraphIndex tmdbIndex = tmdbIdIndexBuilder.buildCompositeIndex();
-      JanusGraphIndex userIndex = userIdIndexBuilder.buildCompositeIndex();
+      final PropertyKey title = janusGraphManagement
+          .makePropertyKey("title")
+          .dataType(String.class)
+          .cardinality(Cardinality.SINGLE)
+          .make();
 
-      mgmt.setConsistency(movieIndex, ConsistencyModifier.LOCK);
-      mgmt.setConsistency(imdbIndex, ConsistencyModifier.LOCK);
-      mgmt.setConsistency(tmdbIndex, ConsistencyModifier.LOCK);
-      mgmt.setConsistency(userIndex, ConsistencyModifier.LOCK);
+      final PropertyKey imdbId = janusGraphManagement
+          .makePropertyKey("imdb_id")
+          .dataType(String.class)
+          .cardinality(Cardinality.SINGLE)
+          .make();
 
-      mgmt.makeVertexLabel("Movie").make();
-      mgmt.makeVertexLabel("User").make();
+      final PropertyKey tmdbId = janusGraphManagement
+          .makePropertyKey("tmdb_id")
+          .dataType(String.class)
+          .cardinality(Cardinality.SINGLE)
+          .make();
 
-      mgmt.makeEdgeLabel("Watched").multiplicity(Multiplicity.SIMPLE).make();
+      final PropertyKey userId = janusGraphManagement
+          .makePropertyKey("user_id")
+          .dataType(String.class)
+          .cardinality(Cardinality.SINGLE)
+          .make();
 
-      mgmt.commit();
+      // Edge property keys
+
+      final PropertyKey rating = janusGraphManagement
+          .makePropertyKey("rating")
+          .dataType(Integer.class)
+          .cardinality(Cardinality.SINGLE)
+          .make();
+
+      final PropertyKey timestamp = janusGraphManagement
+          .makePropertyKey("timestamp")
+          .dataType(String.class)
+          .cardinality(Cardinality.SINGLE)
+          .make();
+
+      // Indexing for vertices
+
+      JanusGraphIndex movieIdIndex = janusGraphManagement.buildIndex("movie_id", Vertex.class)
+          .addKey(movieId).unique().buildCompositeIndex();
+      JanusGraphIndex titleIndex = janusGraphManagement.buildIndex("title", Vertex.class)
+          .addKey(title).buildCompositeIndex();
+      JanusGraphIndex imdbIdIndex = janusGraphManagement.buildIndex("imdb_id", Vertex.class)
+          .addKey(imdbId).unique().buildCompositeIndex();
+      JanusGraphIndex tmdbIdIndex = janusGraphManagement.buildIndex("tmdb_id", Vertex.class)
+          .addKey(tmdbId).unique().buildCompositeIndex();
+      JanusGraphIndex userIdIndex = janusGraphManagement.buildIndex("user_id", Vertex.class)
+          .addKey(userId).unique().buildCompositeIndex();
+      JanusGraphIndex genresIndex = janusGraphManagement.buildIndex("genres", Vertex.class)
+          .addKey(genres).buildCompositeIndex();
+
+      janusGraphManagement.setConsistency(movieIdIndex, ConsistencyModifier.LOCK);
+      janusGraphManagement.setConsistency(imdbIdIndex, ConsistencyModifier.LOCK);
+      janusGraphManagement.setConsistency(tmdbIdIndex, ConsistencyModifier.LOCK);
+      janusGraphManagement.setConsistency(userIdIndex, ConsistencyModifier.LOCK);
+
+      janusGraphManagement.makeVertexLabel("MOVIE").make();
+      janusGraphManagement.makeVertexLabel("USER").make();
+
+      // Indexing for edges
+
+      JanusGraphIndex ratingIndex = janusGraphManagement.buildIndex("rating", Edge.class).addKey(rating).buildCompositeIndex();
+
+      EdgeLabel watched = janusGraphManagement.makeEdgeLabel("watched")
+          .multiplicity(Multiplicity.SIMPLE).make();
+      janusGraphManagement.buildEdgeIndex(watched, "watched", Direction.BOTH, Order.desc, rating);
+
+      janusGraphManagement.commit();
     } catch (SchemaViolationException e) {
-      log.warn("Schema already created!");
+      log.warn("Error while creating schema", e);
     }
   }
 }

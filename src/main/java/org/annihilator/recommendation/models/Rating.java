@@ -13,7 +13,7 @@ public class Rating {
   private String movieId;
 
   @SerializedName("rating")
-  private String rating;
+  private Integer rating;
 
   @SerializedName("timestamp")
   private String timestamp;

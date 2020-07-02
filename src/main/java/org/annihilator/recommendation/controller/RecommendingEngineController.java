@@ -70,7 +70,9 @@ public class RecommendingEngineController {
     if (null == edge.getMovieId()
         || null == edge.getRating()
         || null == edge.getTimestamp()
-        || null == edge.getUserId()) {
+        || null == edge.getUserId()
+        || edge.getRating() <= 0
+        || edge.getRating() > 5) {
       return false;
     }
 

@@ -65,7 +65,7 @@ public class LoadSchema {
 
       final PropertyKey rating = janusGraphManagement
           .makePropertyKey("rating")
-          .dataType(Integer.class)
+          .dataType(Float.class)
           .cardinality(Cardinality.SINGLE)
           .make();
 

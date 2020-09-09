@@ -48,7 +48,7 @@ public class LoadMovieLensData {
     try {
       rating.setUserId(datas[0]);
       rating.setMovieId(datas[1]);
-      rating.setRating(Integer.parseInt(datas[2]));
+      rating.setRating(Float.parseFloat(datas[2]));
       rating.setTimestamp(datas[3]);
 
       log.info(datas[0] + "----------------->" + datas[1]);
